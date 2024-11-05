@@ -1,13 +1,5 @@
 const { getConexao } = require("../config/database");
-let listaJogos = [];
-//let idGerador = 1;
 let idGerador = () => Math.floor(Math.random() * 9000);
-
-// função para redefinir o estado da lista e do idGerador
-function resetState() {
-  listaJogos.length = 0;
-  idGerador = 1;
-}
 
 async function Listar() {
   const client = getConexao();
@@ -33,10 +25,9 @@ async function Inserir(jogo) {
   if (jogo.preco < 0) {
     throw { id: 400, msg: "Valor menor que zero!" };
   }
-  /*
-  if (ValidaNome(jogo.nome) == true) {
+  if (await ValidaNome(jogo.nome)) {
     throw { id: 404, msg: "Jogo já cadastrado!" };
-  }*/
+  }
 
   jogo.id = idGerador();
 
@@ -80,9 +71,15 @@ async function Atualizar(id, jogo) {
 }
 
 async function Deletar(id) {
+  /*if (await validaJogoServidor(id)) {
+    throw { id: 404, msg: "Jogo com pendencias em aberto!" };
+  }*/
   const client = getConexao();
   await client.connect();
-  const result = await client.query("DELETE FROM JOGO WHERE id = $1", [id]);
+  const result = await client.query(
+    "DELETE FROM JOGO WHERE id = $1 RETURNING *",
+    [id]
+  );
   await client.end();
   return result.rows[0];
 }
@@ -106,12 +103,30 @@ async function getPreco(id) {
 }
 //  VALIDAÇÕES
 async function ValidaNome(nome) {
-  const resultado = listaJogos.find((jogo) => jogo.nome == nome);
-  if (resultado) {
+  const client = getConexao();
+  await client.connect();
+  const result = await client.query("SELECT nome FROM JOGO WHERE nome = $1", [
+    nome,
+  ]);
+  await client.end();
+  if (result.rows.length > 0) {
     return true;
-  } else {
-    return false;
   }
+  return false;
+}
+
+async function validaJogoServidor(id) {
+  const client = getConexao();
+  await client.connect();
+  const result = await client.query(
+    "SELECT * FROM SERVIDOR WHERE idjogo = $1",
+    [id]
+  );
+  await client.end();
+  if (result.rows.length > 0) {
+    return true;
+  }
+  return false;
 }
 
 module.exports = {
@@ -122,6 +137,5 @@ module.exports = {
   Atualizar,
   Deletar,
   PesquisarPorCategoria,
-  resetState,
   getPreco,
 };

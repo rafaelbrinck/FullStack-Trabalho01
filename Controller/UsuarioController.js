@@ -56,6 +56,16 @@ async function buscarPorCpf(req, res) {
   }
 }
 
+async function teste(req, res) {
+  const id = req.params.id;
+  try {
+    const buscadorId = await UserService.teste(id);
+    res.json(buscadorId);
+  } catch (err) {
+    res.status(err.id).json(err);
+  }
+}
+
 module.exports = {
   listar,
   inserir,
@@ -63,4 +73,5 @@ module.exports = {
   buscarPorId,
   atualizar,
   deletar,
+  teste,
 };

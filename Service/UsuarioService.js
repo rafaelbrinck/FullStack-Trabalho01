@@ -13,7 +13,7 @@ async function Inserir(user) {
 }
 
 async function BuscarPorId(id) {
-  let user = UserRepository.BuscarPorId(id);
+  let user = await UserRepository.BuscarPorId(id);
   if (user) {
     return await user;
   } else {
@@ -35,6 +35,10 @@ async function Atualizar(id, user) {
 }
 
 async function Deletar(id) {
+  /*const teste = UserRepository.validaId(id);
+  if (teste) {
+    throw { id: 404, msg: "Usuário não encontrado!" };
+  }*/
   let user = UserRepository.Deletar(id);
   if (user) {
     return await user;
@@ -52,6 +56,15 @@ async function BuscarPorCPF(cpf) {
   }
 }
 
+async function teste(id) {
+  let user = UserRepository.validaId(id);
+  if (user) {
+    return await user;
+  } else {
+    throw { id: 404, msg: "Usuário não encontrado!" };
+  }
+}
+
 module.exports = {
   Listar,
   Inserir,
@@ -59,4 +72,5 @@ module.exports = {
   Atualizar,
   Deletar,
   BuscarPorCPF,
+  teste,
 };

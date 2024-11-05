@@ -8,8 +8,8 @@ async function listar(req, res) {
 async function listarDescricoes(req, res) {
   const id = req.params.id;
   try {
-    const buscadorId = ServidorService.listarDescricoes(id);
-    res.json(buscadorId);
+    const lista = await ServidorService.listarDescricoes(id);
+    res.status(201).json(lista);
   } catch (err) {
     res.status(err.id).json(err);
   }

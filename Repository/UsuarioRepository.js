@@ -1,11 +1,5 @@
-let listaUsuarios = [];
 let idGerador = () => Math.floor(Math.random() * 9000);
 const { getConexao } = require("../config/database");
-
-function resetState() {
-  listaUsuarios = 0;
-  idGerador = 1;
-}
 
 async function Listar() {
   const client = getConexao();
@@ -19,11 +13,10 @@ async function Inserir(user) {
   if (!user || !user.nome || !user.cpf) {
     return;
   }
-  // verificando a duplicidade apenas se lista já tiver usuários
-  if (ValidaNome(user.nome) == true) {
+  if (await ValidaNome(user.nome)) {
     throw { id: 404, msg: "Nome já cadastrado!" };
   }
-  if (ValidaCPF(user.cpf) == true) {
+  if (await ValidaCPF(user.cpf)) {
     throw { id: 404, msg: "CPF já cadastrado!" };
   }
 
@@ -65,9 +58,19 @@ async function Atualizar(id, user) {
 }
 
 async function Deletar(id) {
+  /*if (await validaUserServidor(id)) {
+    throw { id: 404, msg: "Jogo não cadastrado!" };
+  }*/ /*
+  const valID = await validaId(id);
+  if (!valID) {
+    throw { id: 404, msg: "Jogo não cadastrado!" };
+  }*/
   const client = getConexao();
   await client.connect();
-  const result = await client.query("DELETE FROM CLIENTE WHERE id = $1", [id]);
+  const result = await client.query(
+    "DELETE FROM CLIENTE WHERE id = $1 RETURNING *",
+    [id]
+  );
   await client.end();
   return result.rows[0];
 }
@@ -79,36 +82,68 @@ async function PesquisarPorCpf(cpf) {
     cpf,
   ]);
   await client.end();
-  return result.rows;
+  if (result.rows.length <= 0) {
+    throw { id: 404, msg: "Usuário não cadastrado!" };
+  }
+  return result.rows[0];
 }
 
-//  VALIDAÇÕES
+// --------------------  VALIDAÇÕES  ---------------------------
+
 async function ValidaCPF(cpf) {
   const client = getConexao();
   await client.connect();
-  const result = await client.query("SELECT * FROM CLIENTE WHERE cpf = $1", [
+  const result = await client.query("SELECT cpf FROM CLIENTE WHERE cpf = $1", [
     cpf,
   ]);
   await client.end();
-
-  if (result) {
-    return true;
-  } else {
-    return false;
+  // Verifica se algum resultado foi retornado
+  if (result.rows.length > 0) {
+    return true; // CPF já existe
   }
+  return false; // CPF não existe
 }
+
 async function ValidaNome(nome) {
   const client = getConexao();
   await client.connect();
-  const result = await client.query("SELECT * FROM CLIENTE WHERE cpf = $1", [
-    nome,
+  const result = await client.query(
+    "SELECT nome FROM CLIENTE WHERE nome = $1",
+    [nome]
+  );
+  await client.end();
+  // Verifica se algum resultado foi retornado
+  if (result.rows.length > 0) {
+    return true; // Nome já existe
+  }
+  return false; // Nome não existe
+}
+
+async function validaUserServidor(id) {
+  const client = getConexao();
+  await client.connect();
+  const result = await client.query(
+    "SELECT * FROM SERVIDOR WHERE idusuario = $1",
+    [id]
+  );
+  await client.end();
+  if (result.rows.length > 0) {
+    return true;
+  }
+  return false;
+}
+
+async function validaId(id) {
+  const client = getConexao();
+  await client.connect();
+  const result = await client.query("SELECT id FROM CLIENTE WHERE id = $1", [
+    id,
   ]);
   await client.end();
-  if (result) {
+  if (result.rows.length > 0) {
     return true;
-  } else {
-    return false;
   }
+  return false;
 }
 
 module.exports = {
@@ -119,5 +154,7 @@ module.exports = {
   Atualizar,
   Deletar,
   PesquisarPorCpf,
-  resetState,
+  validaUserServidor,
+  ValidaCPF,
+  validaId,
 };

@@ -13,7 +13,7 @@ async function inserir(locacao) {
 }
 
 async function listarDescricoes(id) {
-  let locacoes = ServidorRepository.listarDescricoes(id);
+  let locacoes = await ServidorRepository.listarDescricoes(id);
   if (locacoes) {
     return await locacoes;
   } else {
