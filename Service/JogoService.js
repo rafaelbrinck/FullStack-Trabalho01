@@ -17,7 +17,7 @@ async function BuscarPorId(id) {
   if (jogo) {
     return await jogo;
   } else {
-    throw { id: 404, msg: "Jogo não encontrado!" };
+    throw { id: 401, msg: "Jogo não encontrado!" };
   }
 }
 

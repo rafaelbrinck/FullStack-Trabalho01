@@ -31,7 +31,7 @@ async function deletar(req, res) {
     const Valor = await ServidorService.deletar(id);
     res.status(200).json(Valor);
   } catch (err) {
-    res.status(err).json(err);
+    res.status(err.id).json(err);
   }
 }
 
