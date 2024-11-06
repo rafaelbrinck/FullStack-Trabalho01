@@ -37,4 +37,4 @@ A API é composta por várias rotas, organizadas da seguinte forma:
 
 
 
-Rafael Brinckmann e Pedro Sbardelotto
+Rafael Brinckmann
