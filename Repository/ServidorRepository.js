@@ -16,16 +16,14 @@ async function inserir(locacao) {
   if (!locacao || !locacao.idJogo || !locacao.idUsuario) {
     return;
   }
-  const usuario = UsuarioRepository.BuscarPorId(locacao.idUsuario);
+  const usuario = await UsuarioRepository.BuscarPorId(locacao.idUsuario);
   if (!usuario) {
     throw { id: 404, msg: "Usuario não cadastrado!" };
   }
-  const jogo = JogoRepository.BuscarPorId(locacao.idJogo);
+  const jogo = await JogoRepository.BuscarPorId(locacao.idJogo);
   if (!jogo) {
     throw { id: 404, msg: "Jogo não cadastrado!" };
   }
-  jogo.quantidade -= 1;
-  await JogoRepository.Atualizar(jogo.id, jogo);
   locacao.id = idGerador();
   const client = getConexao();
   await client.connect();
@@ -36,7 +34,6 @@ async function inserir(locacao) {
   await client.end();
   return result.rows[0];
 }
-
 async function buscarPorId(id) {
   const client = getConexao();
   await client.connect();
@@ -53,24 +50,27 @@ async function deletar(id) {
   try {
     const Locacao = await buscarPorId(id);
     if (!Locacao) {
-      throw new Error(`Locação com ID ${id} não encontrada.`);
+      throw { id: 404, msg: "Registro do servidor não cadastrado!" };
     }
     if (!Locacao.idjogo) {
-      throw new Error(
-        `A locação com ID ${id} não possui um ID de jogo associado.`
-      );
+      throw {
+        id: 404,
+        msg: `A locação com ID ${id} não possui um ID de jogo associado.`,
+      };
     }
     const jogo = await JogoRepository.BuscarPorId(Locacao.idjogo);
     if (!jogo || jogo.preco === undefined) {
-      throw new Error(
-        `Jogo associado com ID ${Locacao.idjogo} não encontrado ou sem preço.`
-      );
+      throw {
+        id: 404,
+        msg: `Jogo associado com ID ${Locacao.idjogo} não encontrado ou sem preço.`,
+      };
     }
     const jogoPreco = parseFloat(jogo.preco);
     if (isNaN(jogoPreco)) {
-      throw new Error(
-        `O preço do jogo associado não é um número válido: ${jogo.preco}`
-      );
+      throw {
+        id: 404,
+        msg: `O preço do jogo associado não é um número válido: ${jogo.preco}`,
+      };
     }
     await client.query("DELETE FROM SERVIDOR WHERE id = $1 RETURNING *", [id]);
     return "Pagar: R$" + jogoPreco;
@@ -83,6 +83,9 @@ async function deletar(id) {
 }
 
 async function listarDescricoes(id) {
+  if (!(await UsuarioRepository.validaId(id))) {
+    throw { id: 404, msg: "Usuario não cadastrado!" };
+  }
   const client = getConexao();
   await client.connect();
   const resultJogos = await client.query(
@@ -98,4 +101,5 @@ module.exports = {
   inserir,
   listarDescricoes,
   deletar,
+  buscarPorId,
 };

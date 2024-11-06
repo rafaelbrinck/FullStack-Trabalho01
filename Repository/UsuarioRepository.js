@@ -47,6 +47,9 @@ async function Atualizar(id, user) {
   if (!user || !user.nome || !user.cpf) {
     return;
   }
+  if (!(await validaId(id))) {
+    throw { id: 404, msg: "Usuário não cadastrado!" };
+  }
   const client = getConexao();
   await client.connect();
   const result = await client.query(
@@ -61,9 +64,8 @@ async function Deletar(id) {
   /*if (await validaUserServidor(id)) {
     throw { id: 404, msg: "Jogo não cadastrado!" };
   }*/ /*
-  const valID = await validaId(id);
-  if (!valID) {
-    throw { id: 404, msg: "Jogo não cadastrado!" };
+  if (!(await BuscarPorId(id))) {
+    throw { id: 404, msg: "Usuário não cadastrado!" };
   }*/
   const client = getConexao();
   await client.connect();
@@ -151,10 +153,10 @@ module.exports = {
   Inserir,
   Atualizar,
   BuscarPorId,
-  Atualizar,
   Deletar,
   PesquisarPorCpf,
   validaUserServidor,
   ValidaCPF,
   validaId,
+  ValidaNome,
 };

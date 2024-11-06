@@ -43,6 +43,9 @@ async function Inserir(jogo) {
 }
 
 async function BuscarPorId(id) {
+  if (!(await validaId(id))) {
+    throw { id: 404, msg: "Jogo não cadastrado!" };
+  }
   const client = getConexao();
   await client.connect();
   const result = await client.query("SELECT * FROM JOGO WHERE id = $1", [id]);
@@ -60,6 +63,9 @@ async function Atualizar(id, jogo) {
   ) {
     return;
   }
+  if (!(await validaId(id))) {
+    throw { id: 404, msg: "Jogo não cadastrado!" };
+  }
   const client = getConexao();
   await client.connect();
   const result = await client.query(
@@ -73,6 +79,9 @@ async function Atualizar(id, jogo) {
 async function Deletar(id) {
   /*if (await validaJogoServidor(id)) {
     throw { id: 404, msg: "Jogo com pendencias em aberto!" };
+  }*/ /*
+  if (!(await BuscarPorId(id))) {
+    throw { id: 404, msg: "Usuario não cadastrado!" };
   }*/
   const client = getConexao();
   await client.connect();
@@ -94,13 +103,6 @@ async function PesquisarPorCategoria(categoria) {
   return result.rows;
 }
 
-async function getPreco(id) {
-  const client = getConexao();
-  await client.connect();
-  const result = await client.query("SELECT * FROM JOGO WHERE id = $1", [id]);
-  await client.end();
-  return result.rows[0].preco;
-}
 //  VALIDAÇÕES
 async function ValidaNome(nome) {
   const client = getConexao();
@@ -129,6 +131,17 @@ async function validaJogoServidor(id) {
   return false;
 }
 
+async function validaId(id) {
+  const client = getConexao();
+  await client.connect();
+  const result = await client.query("SELECT id FROM JOGO WHERE id = $1", [id]);
+  await client.end();
+  if (result.rows.length > 0) {
+    return true;
+  }
+  return false;
+}
+
 module.exports = {
   Listar,
   Inserir,
@@ -137,5 +150,6 @@ module.exports = {
   Atualizar,
   Deletar,
   PesquisarPorCategoria,
-  getPreco,
+  ValidaNome,
+  validaJogoServidor,
 };
