@@ -36,23 +36,28 @@ describe("Testes do UsuarioRepository", () => {
 
     const result = await Listar();
     expect(result).toEqual(mockData);
-    expect(mockClient.query).toHaveBeenCalledWith("SELECT * FROM CLIENTE");
+    expect(mockClient.query).toHaveBeenCalledWith("SELECT * FROM USUARIOS");
   });
 
   test("Inserir: deve inserir um usuário no banco de dados", async () => {
-    const user = { nome: "Teste Nome", cpf: "12345678900" };
+    const user = {
+      nome: "Teste Nome",
+      cpf: "12345678900",
+      email: "email@email.com",
+      valor: 0,
+    };
 
     // Simulando que ValidaNome e ValidaCPF retornam false
     mockClient.query
-      .mockResolvedValueOnce({ rows: [] }) // ValidaNome
-      .mockResolvedValueOnce({ rows: [] }) // ValidaCPF
+      // .mockResolvedValueOnce({ rows: [] }) // ValidaNome
+      // .mockResolvedValueOnce({ rows: [] }) // ValidaCPF
       .mockResolvedValue({ rows: [user] }); // Inserção
 
     const result = await Inserir(user);
     expect(result).toEqual(user);
     expect(mockClient.query).toHaveBeenCalledWith(
-      "INSERT INTO CLIENTE (id, nome, cpf, valor) VALUES ($1, $2, $3, $4) RETURNING *",
-      [expect.any(Number), user.nome, user.cpf, 0]
+      "INSERT INTO USUARIOS (nome, cpf, email, valor) VALUES ($1, $2, $3, $4) RETURNING *",
+      [user.nome, user.cpf, user.email, 0]
     );
   });
 
@@ -63,7 +68,7 @@ describe("Testes do UsuarioRepository", () => {
     const result = await BuscarPorId(1);
     expect(result).toEqual(user);
     expect(mockClient.query).toHaveBeenCalledWith(
-      "SELECT * FROM CLIENTE WHERE id = $1",
+      "SELECT * FROM USUARIOS WHERE id = $1",
       [1]
     );
   });
@@ -76,7 +81,7 @@ describe("Testes do UsuarioRepository", () => {
     const result = await Atualizar(1, user);
     expect(result).toEqual(updatedUser);
     expect(mockClient.query).toHaveBeenCalledWith(
-      "UPDATE CLIENTE SET nome = $1, cpf = $2 WHERE id = $3 RETURNING *",
+      "UPDATE USUARIOS SET nome = $1, cpf = $2 WHERE id = $3 RETURNING *",
       [user.nome, user.cpf, 1]
     );
   });
@@ -88,7 +93,7 @@ describe("Testes do UsuarioRepository", () => {
     const result = await Deletar(1);
     expect(result).toEqual(user);
     expect(mockClient.query).toHaveBeenCalledWith(
-      "DELETE FROM CLIENTE WHERE id = $1 RETURNING *",
+      "DELETE FROM USUARIOS WHERE id = $1 RETURNING *",
       [1]
     );
   });
@@ -100,7 +105,7 @@ describe("Testes do UsuarioRepository", () => {
     const result = await ValidaCPF(cpf);
     expect(result).toBe(true);
     expect(mockClient.query).toHaveBeenCalledWith(
-      "SELECT cpf FROM CLIENTE WHERE cpf = $1",
+      "SELECT cpf FROM USUARIOS WHERE cpf = $1",
       [cpf]
     );
   });
@@ -112,7 +117,7 @@ describe("Testes do UsuarioRepository", () => {
     const result = await ValidaNome(nome);
     expect(result).toBe(true);
     expect(mockClient.query).toHaveBeenCalledWith(
-      "SELECT nome FROM CLIENTE WHERE nome = $1",
+      "SELECT nome FROM USUARIOS WHERE nome = $1",
       [nome]
     );
   });

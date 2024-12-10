@@ -1,4 +1,4 @@
-const ServidorRepository = require("./ServidorRepository");
+const LOCACOESRepository = require("./ServidorRepository");
 const UsuarioRepository = require("./UsuarioRepository");
 const JogoRepository = require("./JogoRepository");
 const { getConexao } = require("../config/database");
@@ -7,7 +7,7 @@ jest.mock("../config/database", () => ({
   getConexao: jest.fn(),
 }));
 
-describe("Testes do ServidorRepository", () => {
+describe("Testes do LOCACOESRepository", () => {
   let mockClient;
 
   beforeEach(() => {
@@ -27,9 +27,9 @@ describe("Testes do ServidorRepository", () => {
     const mockData = [{ id: 1, idUsuario: 101, idJogo: 202 }];
     mockClient.query.mockResolvedValue({ rows: mockData });
 
-    const result = await ServidorRepository.listar();
+    const result = await LOCACOESRepository.listar();
 
-    expect(mockClient.query).toHaveBeenCalledWith("SELECT * FROM SERVIDOR");
+    expect(mockClient.query).toHaveBeenCalledWith("SELECT * FROM LOCACOES");
     expect(result).toEqual(mockData);
   });
 
@@ -42,11 +42,21 @@ describe("Testes do ServidorRepository", () => {
       rows: [{ id: 1, idUsuario: 101, idJogo: 202 }],
     });
 
-    const result = await ServidorRepository.inserir(locacao);
+    const result = await LOCACOESRepository.inserir(locacao);
 
     expect(mockClient.query).toHaveBeenCalledWith(
-      "INSERT INTO SERVIDOR (id, idusuario, idjogo) VALUES ($1, $2, $3) RETURNING *",
-      [expect.any(Number), locacao.idUsuario, locacao.idJogo]
+      "SELECT * FROM USUARIOS WHERE id = $1",
+      [locacao.idUsuario]
+    );
+
+    expect(mockClient.query).toHaveBeenCalledWith(
+      "UPDATE USUARIOS SET valor = $1 WHERE id = $2 RETURNING *",
+      [expect.any(Number), locacao.idUsuario, locacao.idJogo, NaN, undefined]
+    );
+
+    expect(mockClient.query).toHaveBeenCalledWith(
+      "INSERT INTO LOCACOES (idusuario, idjogo) VALUES ($1, $2) RETURNING *",
+      [locacao.idUsuario, locacao.idJogo, undefined]
     );
     expect(result).toEqual({ id: 1, idUsuario: 101, idJogo: 202 });
   });
@@ -55,10 +65,10 @@ describe("Testes do ServidorRepository", () => {
     const mockData = { id: 1, idUsuario: 101, idJogo: 202 };
     mockClient.query.mockResolvedValue({ rows: [mockData] });
 
-    const result = await ServidorRepository.buscarPorId(1);
+    const result = await LOCACOESRepository.buscarPorId(1);
 
     expect(mockClient.query).toHaveBeenCalledWith(
-      "SELECT * FROM SERVIDOR WHERE id = $1",
+      "SELECT * FROM LOCACOES WHERE id = $1",
       [1]
     );
     expect(result).toEqual(mockData);
@@ -76,10 +86,10 @@ describe("Testes do ServidorRepository", () => {
     // Mock para JogoRepository.BuscarPorId para retornar o jogo correto
     jest.spyOn(JogoRepository, "BuscarPorId").mockResolvedValue(jogo);
 
-    const result = await ServidorRepository.deletar(1);
+    const result = await LOCACOESRepository.deletar(1);
 
     expect(mockClient.query).toHaveBeenCalledWith(
-      "DELETE FROM SERVIDOR WHERE id = $1 RETURNING *",
+      "DELETE FROM LOCACOES WHERE id = $1 RETURNING *",
       [1]
     );
     expect(result).toBe("Pagar: R$50.00");
@@ -91,10 +101,14 @@ describe("Testes do ServidorRepository", () => {
 
     mockClient.query.mockResolvedValue({ rows: jogos });
 
-    const result = await ServidorRepository.listarDescricoes(idUsuario);
+    const result = await LOCACOESRepository.listarDescricoes(idUsuario);
 
     expect(mockClient.query).toHaveBeenCalledWith(
-      "SELECT j.* FROM jogo j join servidor s on j.id = s.idjogo join cliente c on c.id = s.idusuario WHERE s.idusuario = $1 group by s.id, j.id, c.id",
+      "SELECT id FROM USUARIOS WHERE id = $1",
+      [idUsuario]
+    );
+    expect(mockClient.query).toHaveBeenCalledWith(
+      "SELECT j.* FROM JOGOS j join LOCACOES s on j.id = s.idjogo join USUARIOS c on c.id = s.idusuario WHERE s.idusuario = $1 group by s.id, j.id, c.id",
       [idUsuario]
     );
     expect(result).toEqual(jogos);

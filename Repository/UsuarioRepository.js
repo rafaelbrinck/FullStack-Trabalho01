@@ -4,30 +4,28 @@ const { getConexao } = require("../config/database");
 async function Listar() {
   const client = getConexao();
   await client.connect();
-  const result = await client.query("SELECT * FROM CLIENTE");
+  const result = await client.query("SELECT * FROM USUARIOS");
   await client.end();
   return result.rows;
 }
 
 async function Inserir(user) {
-  if (!user || !user.nome || !user.cpf) {
-    return;
-  }
-  if (await ValidaNome(user.nome)) {
-    throw { id: 404, msg: "Nome já cadastrado!" };
-  }
-  if (await ValidaCPF(user.cpf)) {
-    throw { id: 404, msg: "CPF já cadastrado!" };
-  }
-
-  user.id = idGerador();
+  // if (!user || !user.nome || !user.cpf) {
+  //   return;
+  // }
+  // if (await ValidaNome(user.nome)) {
+  //   throw { id: 404, msg: "Nome já cadastrado!" };
+  // }
+  // if (await ValidaCPF(user.cpf)) {
+  //   throw { id: 404, msg: "CPF já cadastrado!" };
+  // }
   user.valor = 0;
 
   const client = getConexao();
   await client.connect();
   const result = await client.query(
-    "INSERT INTO CLIENTE (id, nome, cpf, valor) VALUES ($1, $2, $3, $4) RETURNING *",
-    [user.id, user.nome, user.cpf, user.valor]
+    "INSERT INTO USUARIOS (nome, cpf, email, valor) VALUES ($1, $2, $3, $4) RETURNING *",
+    [user.nome, user.cpf, user.email, user.valor]
   );
   await client.end();
   return result.rows[0];
@@ -36,7 +34,7 @@ async function Inserir(user) {
 async function BuscarPorId(id) {
   const client = getConexao();
   await client.connect();
-  const result = await client.query("SELECT * FROM CLIENTE WHERE id = $1", [
+  const result = await client.query("SELECT * FROM USUARIOS WHERE id = $1", [
     id,
   ]);
   await client.end();
@@ -53,24 +51,44 @@ async function Atualizar(id, user) {
   const client = getConexao();
   await client.connect();
   const result = await client.query(
-    "UPDATE CLIENTE SET nome = $1, cpf = $2 WHERE id = $3 RETURNING *",
+    "UPDATE USUARIOS SET nome = $1, cpf = $2 WHERE id = $3 RETURNING *",
     [user.nome, user.cpf, id]
   );
   await client.end();
   return result.rows[0];
 }
 
+async function atualizaValor(id, valor) {
+  const client = getConexao();
+  await client.connect();
+  const clienteObtido = await BuscarPorId(id);
+  let valorNovo = parseFloat(clienteObtido.valor) + parseFloat(valor);
+  const result = await client.query(
+    "UPDATE USUARIOS SET valor = $1 WHERE id = $2 RETURNING *",
+    [valorNovo, id]
+  );
+  await client.end();
+  return result.rows[0];
+}
+
+async function diminuiValor(id, valor) {
+  const client = getConexao();
+  await client.connect();
+  const clienteObtido = await BuscarPorId(id);
+  let valorNovo = parseFloat(clienteObtido.valor) - parseFloat(valor);
+  const result = await client.query(
+    "UPDATE USUARIOS SET valor = $1 WHERE id = $2 RETURNING *",
+    [valorNovo, id]
+  );
+  await client.end();
+  return result.rows[0];
+}
+
 async function Deletar(id) {
-  /*if (await validaUserServidor(id)) {
-    throw { id: 404, msg: "Jogo não cadastrado!" };
-  }*/ /*
-  if (!(await BuscarPorId(id))) {
-    throw { id: 404, msg: "Usuário não cadastrado!" };
-  }*/
   const client = getConexao();
   await client.connect();
   const result = await client.query(
-    "DELETE FROM CLIENTE WHERE id = $1 RETURNING *",
+    "DELETE FROM USUARIOS WHERE id = $1 RETURNING *",
     [id]
   );
   await client.end();
@@ -80,7 +98,7 @@ async function Deletar(id) {
 async function PesquisarPorCpf(cpf) {
   const client = getConexao();
   await client.connect();
-  const result = await client.query("SELECT * FROM CLIENTE WHERE cpf = $1", [
+  const result = await client.query("SELECT * FROM USUARIOS WHERE cpf = $1", [
     cpf,
   ]);
   await client.end();
@@ -95,7 +113,7 @@ async function PesquisarPorCpf(cpf) {
 async function ValidaCPF(cpf) {
   const client = getConexao();
   await client.connect();
-  const result = await client.query("SELECT cpf FROM CLIENTE WHERE cpf = $1", [
+  const result = await client.query("SELECT cpf FROM USUARIOS WHERE cpf = $1", [
     cpf,
   ]);
   await client.end();
@@ -110,7 +128,7 @@ async function ValidaNome(nome) {
   const client = getConexao();
   await client.connect();
   const result = await client.query(
-    "SELECT nome FROM CLIENTE WHERE nome = $1",
+    "SELECT nome FROM USUARIOS WHERE nome = $1",
     [nome]
   );
   await client.end();
@@ -125,7 +143,7 @@ async function validaUserServidor(id) {
   const client = getConexao();
   await client.connect();
   const result = await client.query(
-    "SELECT * FROM SERVIDOR WHERE idusuario = $1",
+    "SELECT * FROM LOCACOES WHERE idusuario = $1",
     [id]
   );
   await client.end();
@@ -138,7 +156,7 @@ async function validaUserServidor(id) {
 async function validaId(id) {
   const client = getConexao();
   await client.connect();
-  const result = await client.query("SELECT id FROM CLIENTE WHERE id = $1", [
+  const result = await client.query("SELECT id FROM USUARIOS WHERE id = $1", [
     id,
   ]);
   await client.end();
@@ -159,4 +177,6 @@ module.exports = {
   ValidaCPF,
   validaId,
   ValidaNome,
+  atualizaValor,
+  diminuiValor,
 };

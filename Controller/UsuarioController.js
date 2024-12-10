@@ -42,7 +42,7 @@ async function deletar(req, res) {
     const userExcluido = await UserService.Deletar(id);
     res.status(200).json(userExcluido);
   } catch (err) {
-    res.status(err).json(err);
+    res.status(err.id).json(err);
   }
 }
 

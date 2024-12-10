@@ -2,10 +2,10 @@ const { Client } = require("pg");
 
 const conexao = {
   host: "localhost",
-  port: 5432,
+  port: 5433,
   user: "postgres",
   password: "banco",
-  database: "Locadora",
+  database: "api",
 };
 
 function getConexao() {
