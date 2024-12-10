@@ -5,10 +5,23 @@ async function Listar() {
 }
 
 async function Inserir(user) {
-  if (user && user.nome && user.cpf) {
-    return await UserRepository.Inserir(user);
-  } else {
-    throw { id: 400, msg: "Usuário sem dados corretos" };
+  if (await UserRepository.ValidaEmail(user.email)) {
+    throw { id: 404, msg: "Email já cadastrado!" };
+  }
+  if (await UserRepository.ValidaNome(user.nome)) {
+    throw { id: 404, msg: "Nome já cadastrado!" };
+  }
+  if (await UserRepository.ValidaCPF(user.cpf)) {
+    throw { id: 404, msg: "CPF já cadastrado!" };
+  }
+  try {
+    if (user && user.nome && user.cpf) {
+      return await UserRepository.Inserir(user);
+    } else {
+      throw { id: 400, msg: "Usuário sem dados corretos" };
+    }
+  } catch {
+    throw { id: 404, msg: "Problema interno" };
   }
 }
 
@@ -34,11 +47,30 @@ async function Atualizar(id, user) {
   }
 }
 
+async function atualizaValor(id, valor) {
+  if (valor <= 0) {
+    throw { id: 400, msg: "Valor menor ou igual a ZERO não permitido" };
+  }
+  let user = await UserRepository.atualizaValor(valor, id);
+  if (user) {
+    return await user;
+  } else {
+    throw { id: 404, msg: "Usuário não encontrado!" };
+  }
+}
+
 async function Deletar(id) {
   /*const teste = UserRepository.validaId(id);
   if (teste) {
     throw { id: 404, msg: "Usuário não encontrado!" };
   }*/
+  if (!(await UserRepository.BuscarPorId(id))) {
+    throw { id: 404, msg: "Usuário não cadastrado!" };
+  }
+  const validaUserServidor = await UserRepository.validaUserServidor(id);
+  if (validaUserServidor) {
+    throw { id: 400, msg: "Usuario cadastrado no sistema!" };
+  }
   let user = UserRepository.Deletar(id);
   if (user) {
     return await user;
@@ -73,4 +105,5 @@ module.exports = {
   Deletar,
   BuscarPorCPF,
   teste,
+  atualizaValor,
 };

@@ -5,7 +5,16 @@ async function Listar() {
 }
 
 async function Inserir(jogo) {
-  if (jogo && jogo.nome && jogo.categoria && jogo.preco) {
+  if (jogo.quantidade < 0) {
+    throw { id: 400, msg: "Quantidade menor que zero!" };
+  }
+  if (jogo.preco < 0) {
+    throw { id: 400, msg: "Valor menor que zero!" };
+  }
+  if (await JogoRepository.ValidaNome(jogo.nome)) {
+    throw { id: 404, msg: "Jogo já cadastrado!" };
+  }
+  if (jogo && jogo.nome && jogo.preco) {
     return await JogoRepository.Inserir(jogo);
   } else {
     throw { id: 400, msg: "Jogo sem dados corretos" };
@@ -35,10 +44,14 @@ async function Atualizar(id, jogo) {
 }
 
 async function Deletar(id) {
-  let jogo = JogoRepository.Deletar(id);
-  if (jogo) {
-    return await jogo;
-  } else {
+  try {
+    let jogo = JogoRepository.Deletar(id);
+    if (jogo) {
+      return await jogo;
+    } else {
+      throw { id: 404, msg: "Jogo não encontrado!" };
+    }
+  } catch (err) {
     throw { id: 404, msg: "Jogo não encontrado!" };
   }
 }

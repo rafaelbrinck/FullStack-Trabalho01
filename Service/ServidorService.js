@@ -5,7 +5,7 @@ async function listar() {
 }
 
 async function inserir(locacao) {
-  if (locacao && locacao.idJogo && locacao.idUsuario) {
+  if (locacao && locacao.idjogo && locacao.idusuario) {
     return await ServidorRepository.inserir(locacao);
   } else {
     throw { id: 400, msg: "Locação sem dados corretos" };

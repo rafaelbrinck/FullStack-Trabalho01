@@ -42,7 +42,7 @@ async function deletar(req, res) {
     const jogoExcluido = await JogoService.Deletar(id);
     res.status(200).json(jogoExcluido);
   } catch (err) {
-    res.status(err).json(err);
+    res.status(err.id).json(err);
   }
 }
 

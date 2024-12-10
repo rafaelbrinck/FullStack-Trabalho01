@@ -7,29 +7,34 @@ let idGerador = () => Math.floor(Math.random() * 9000);
 async function listar() {
   const client = getConexao();
   await client.connect();
-  const result = await client.query("SELECT * FROM SERVIDOR");
+  const result = await client.query("SELECT * FROM LOCACOES");
   await client.end();
   return result.rows;
 }
 
 async function inserir(locacao) {
-  if (!locacao || !locacao.idJogo || !locacao.idUsuario) {
-    return;
-  }
-  const usuario = await UsuarioRepository.BuscarPorId(locacao.idUsuario);
+  const usuario = await UsuarioRepository.BuscarPorId(locacao.idusuario);
   if (!usuario) {
     throw { id: 404, msg: "Usuario não cadastrado!" };
   }
-  const jogo = await JogoRepository.BuscarPorId(locacao.idJogo);
+  const jogo = await JogoRepository.BuscarPorId(locacao.idjogo);
   if (!jogo) {
     throw { id: 404, msg: "Jogo não cadastrado!" };
   }
-  locacao.id = idGerador();
+
+  const atualizado = await UsuarioRepository.atualizaValor(
+    locacao.idusuario,
+    jogo.preco
+  );
+  if (!atualizado) {
+    throw { id: 404, msg: "Problema para atualizar cadastro" };
+  }
+
   const client = getConexao();
   await client.connect();
   const result = await client.query(
-    "INSERT INTO SERVIDOR (id, idusuario, idjogo) VALUES ($1, $2, $3) RETURNING *",
-    [locacao.id, locacao.idUsuario, locacao.idJogo]
+    "INSERT INTO LOCACOES (idusuario, idjogo) VALUES ($1, $2) RETURNING *",
+    [locacao.idusuario, locacao.idjogo]
   );
   await client.end();
   return result.rows[0];
@@ -37,7 +42,7 @@ async function inserir(locacao) {
 async function buscarPorId(id) {
   const client = getConexao();
   await client.connect();
-  const result = await client.query("SELECT * FROM SERVIDOR WHERE id = $1", [
+  const result = await client.query("SELECT * FROM LOCACOES WHERE id = $1", [
     id,
   ]);
   await client.end();
@@ -72,7 +77,17 @@ async function deletar(id) {
         msg: `O preço do jogo associado não é um número válido: ${jogo.preco}`,
       };
     }
-    await client.query("DELETE FROM SERVIDOR WHERE id = $1 RETURNING *", [id]);
+    const atualizado = await UsuarioRepository.diminuiValor(
+      Locacao.idusuario,
+      jogoPreco
+    );
+    if (!atualizado) {
+      throw {
+        id: 404,
+        msg: "Problema em atualizar cadastro",
+      };
+    }
+    await client.query("DELETE FROM LOCACOES WHERE id = $1 RETURNING *", [id]);
     return "Pagar: R$" + jogoPreco;
   } catch (err) {
     console.error("Erro ao deletar registro:", err.message);
@@ -89,7 +104,7 @@ async function listarDescricoes(id) {
   const client = getConexao();
   await client.connect();
   const resultJogos = await client.query(
-    "SELECT j.* FROM jogo j join servidor s on j.id = s.idjogo join cliente c on c.id = s.idusuario WHERE s.idusuario = $1 group by s.id, j.id, c.id",
+    "SELECT j.* FROM JOGOS j join LOCACOES s on j.id = s.idjogo join USUARIOS c on c.id = s.idusuario WHERE s.idusuario = $1 group by s.id, j.id, c.id",
     [id]
   );
   await client.end();
