@@ -6,14 +6,15 @@
     "test:usuario": "jest Repository/UsuarioRepository.test.js",
     "test:jogos": "jest Repository/JogoRepository.test.js",
     "test:servidor": "jest Repository/ServidorRepository.test.js",
-    "start": "node --watch app.js"
+    "start": "node index.js"
   },
   "author": "Rafael Brinck",
   "license": "ISC",
   "description": "",
   "dependencies": {
     "express": "^4.21.1",
-    "pg": "^8.13.1"
+    "pg": "^8.13.1",
+    "render": "^0.1.4"
   },
   "devDependencies": {
     "jest": "^29.7.0",

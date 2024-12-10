@@ -5,15 +5,19 @@ async function Listar() {
 }
 
 async function Inserir(user) {
+<<<<<<< HEAD
   if (await UserRepository.ValidaEmail(user.email)) {
     throw { id: 404, msg: "Email já cadastrado!" };
   }
+=======
+>>>>>>> f24ca2330ea24c19941f8b73f616193b2e390a69
   if (await UserRepository.ValidaNome(user.nome)) {
     throw { id: 404, msg: "Nome já cadastrado!" };
   }
   if (await UserRepository.ValidaCPF(user.cpf)) {
     throw { id: 404, msg: "CPF já cadastrado!" };
   }
+<<<<<<< HEAD
   try {
     if (user && user.nome && user.cpf) {
       return await UserRepository.Inserir(user);
@@ -22,6 +26,13 @@ async function Inserir(user) {
     }
   } catch {
     throw { id: 404, msg: "Problema interno" };
+=======
+
+  if (user && user.nome && user.cpf) {
+    return await UserRepository.Inserir(user);
+  } else {
+    throw { id: 400, msg: "Usuário sem dados corretos" };
+>>>>>>> f24ca2330ea24c19941f8b73f616193b2e390a69
   }
 }
 
