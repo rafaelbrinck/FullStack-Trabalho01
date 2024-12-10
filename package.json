@@ -6,7 +6,7 @@
     "test:usuario": "jest Repository/UsuarioRepository.test.js",
     "test:jogos": "jest Repository/JogoRepository.test.js",
     "test:servidor": "jest Repository/ServidorRepository.test.js",
-    "start": "node --watch app.js"
+    "start": "node index.js"
   },
   "author": "Rafael Brinck",
   "license": "ISC",
