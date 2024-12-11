@@ -194,8 +194,5 @@ module.exports = {
   ValidaNome,
   atualizaValor,
   diminuiValor,
-<<<<<<< HEAD
   ValidaEmail,
-=======
->>>>>>> f24ca2330ea24c19941f8b73f616193b2e390a69
 };

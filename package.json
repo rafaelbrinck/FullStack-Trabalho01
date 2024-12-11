@@ -1,20 +1,19 @@
 {
   "name": "trabalho01",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
     "test:usuario": "jest Repository/UsuarioRepository.test.js",
     "test:jogos": "jest Repository/JogoRepository.test.js",
     "test:servidor": "jest Repository/ServidorRepository.test.js",
-    "start": "node index.js"
+    "start": "node app.js"
   },
   "author": "Rafael Brinck",
   "license": "ISC",
   "description": "",
   "dependencies": {
     "express": "^4.21.1",
-    "pg": "^8.13.1",
-    "render": "^0.1.4"
+    "pg": "^8.13.1"
   },
   "devDependencies": {
     "jest": "^29.7.0",
